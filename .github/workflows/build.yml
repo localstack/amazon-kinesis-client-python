@@ -1,0 +1,66 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish the build!'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build_wheel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Used to host cibuildwheel
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build wheel
+        run: pip wheel -w ./wheelhouse . --no-deps
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheel
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
+
+  upload_pypi:
+    needs: [build_wheel, build_sdist]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/kclpy-ext
+    permissions:
+      id-token: write
+    if: inputs.publish
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          # unpacks all CIBW artifacts into dist/
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+      - name: List artifacts
+        run: ls -lah dist/
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
