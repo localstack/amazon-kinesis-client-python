@@ -227,9 +227,9 @@ if __name__ == '__main__':
         pass
 
     setup(
-        name=PACKAGE_NAME,
+        name=PACKAGE_NAME + "-ext",
         version=PACKAGE_VERSION,
-        description='A python interface for the Amazon Kinesis Client Library MultiLangDaemon',
+        description='A python interface for the Amazon Kinesis Client Library MultiLangDaemon - ext',
         license='Apache-2.0',
         packages=[PACKAGE_NAME, PACKAGE_NAME + "/v2", PACKAGE_NAME + "/v3", 'samples'],
         scripts=glob.glob('samples/*py'),
@@ -242,7 +242,7 @@ if __name__ == '__main__':
         setup_requires=["pytest-runner"],
         tests_require=["pytest", "mock"],
         cmdclass=commands,
-        url="https://github.com/awslabs/amazon-kinesis-client-python",
+        url="https://github.com/localstack/amazon-kinesis-client-python",
         keywords="amazon kinesis client library python",
         zip_safe=False,
         )

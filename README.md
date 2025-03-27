@@ -1,3 +1,8 @@
+# Why this Fork for LocalStack?
+
+The official AWS python package does not publish the wheels, thus causing the need to always pull from maven on every install.
+This destabilizes our pipeline because maven might rate-limit our runners when accessing the JARs.
+
 # Amazon Kinesis Client Library for Python
 
 [![Version](https://img.shields.io/pypi/v/amazon-kclpy.svg?style=flat)](https://pypi.org/project/amazon-kclpy/) [![UnitTestCoverage](https://github.com/awslabs/amazon-kinesis-client-python/actions/workflows/run-unit-tests.yml/badge.svg)](https://github.com/awslabs/amazon-kinesis-client-python/actions/workflows/run-unit-tests.yml)
