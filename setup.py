@@ -42,12 +42,13 @@ else:
 
 PACKAGE_NAME = 'amazon_kclpy'
 JAR_DIRECTORY = os.path.join(PACKAGE_NAME, 'jars')
-PACKAGE_VERSION = '3.0.5'
+PACKAGE_VERSION = '3.1.3'
 PYTHON_REQUIREMENTS = [
-    'boto3',
-    # argparse is part of python2.7 but must be declared for python2.6
-    'argparse',
+    "boto3",
+    # argparse is part of python3.2+
+    "argparse; python_version <= '3.1'" ,
 ]
+
 REMOTE_MAVEN_PACKAGES_FILE = 'pom.xml'
 
 class MavenJarDownloader:
