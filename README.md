@@ -156,6 +156,10 @@ all languages.
 
 ## Release Notes
 
+### Release 3.1.3.post1 (May 21, 2026)
+* Bump netty.version from 4.2.7.Final to 4.2.13.Final
+* Bump fasterxml-jackson.version from 2.15.0 to 2.18.6
+
 ### Release 3.1.3 (October 29, 2025)
 * [#331](https://github.com/awslabs/amazon-kinesis-client-python/pull/331) Upgrade netty.version from 4.2.6.Final to 4.2.7.Final
 * [#333](https://github.com/awslabs/amazon-kinesis-client-python/pull/333) Only include argparse for python version 3.1 and below
