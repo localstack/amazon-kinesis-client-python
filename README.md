@@ -156,6 +156,9 @@ all languages.
 
 ## Release Notes
 
+### Release 3.1.3.post2 (July 9, 2026)
+* Bump fasterxml-jackson.version from 2.18.6 to 2.18.8
+
 ### Release 3.1.3.post2 (June 22, 2026)
 * Bump netty.version from 4.2.13.Final to 4.2.15.Final
 
