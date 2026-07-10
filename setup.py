@@ -40,31 +40,36 @@ else:
 # to rerun the install command.
 #
 
-PACKAGE_NAME = 'amazon_kclpy'
-JAR_DIRECTORY = os.path.join(PACKAGE_NAME, 'jars')
-PACKAGE_VERSION = '3.1.3.post2'
+PACKAGE_NAME = "amazon_kclpy"
+JAR_DIRECTORY = os.path.join(PACKAGE_NAME, "jars")
+PACKAGE_VERSION = "3.1.3.post3"
 PYTHON_REQUIREMENTS = [
     "boto3",
     # argparse is part of python3.2+
-    "argparse; python_version <= '3.1'" ,
+    "argparse; python_version <= '3.1'",
 ]
 
-REMOTE_MAVEN_PACKAGES_FILE = 'pom.xml'
+REMOTE_MAVEN_PACKAGES_FILE = "pom.xml"
+
 
 class MavenJarDownloader:
-
-    def __init__(self, on_completion, destdir=JAR_DIRECTORY, packages_file=REMOTE_MAVEN_PACKAGES_FILE):
+    def __init__(
+        self,
+        on_completion,
+        destdir=JAR_DIRECTORY,
+        packages_file=REMOTE_MAVEN_PACKAGES_FILE,
+    ):
         self.on_completion = on_completion
         self.destdir = destdir
         self.packages_file = packages_file
         self.packages = self.parse_packages_from_pom()
 
     def warning_string(self, missing_jars=[]):
-        s = '''The following jars were not installed because they were not
-present in this package at the time of installation:'''
+        s = """The following jars were not installed because they were not
+present in this package at the time of installation:"""
         for jar in missing_jars:
-            s += '\n  {jar}'.format(jar=jar)
-        s += '''
+            s += "\n  {jar}".format(jar=jar)
+        s += """
 This doesn't affect the rest of the installation, but may make it more
 difficult for you to run the sample app and get started.
 
@@ -74,20 +79,23 @@ You should consider running:
     python setup.py install
 
 Which will download the required jars and rerun the install.
-'''
+"""
         return s
 
     def parse_packages_from_pom(self):
         maven_root = ET.parse(self.packages_file).getroot()
-        maven_version = '{http://maven.apache.org/POM/4.0.0}'
+        maven_version = "{http://maven.apache.org/POM/4.0.0}"
         # dictionary of common package versions encoded in `properties` section
-        properties = {f"${{{child.tag.replace(maven_version, '')}}}": child.text
-                      for child in maven_root.find(f'{maven_version}properties').iter() if 'version' in child.tag}
+        properties = {
+            f"${{{child.tag.replace(maven_version, '')}}}": child.text
+            for child in maven_root.find(f"{maven_version}properties").iter()
+            if "version" in child.tag
+        }
 
         packages = []
-        for dep in maven_root.iter(f'{maven_version}dependency'):
+        for dep in maven_root.iter(f"{maven_version}dependency"):
             dependency = []
-            for attr in ['groupId', 'artifactId', 'version']:
+            for attr in ["groupId", "artifactId", "version"]:
                 val = dep.find(maven_version + attr).text
                 if val in properties:
                     dependency.append(properties[val])
@@ -105,11 +113,16 @@ Which will download the required jars and rerun the install.
             raise RuntimeError(self.warning_string(missing_jars))
 
     def package_destination(self, artifact_id, version):
-        return '{artifact_id}-{version}.jar'.format(artifact_id=artifact_id, version=version)
+        return "{artifact_id}-{version}.jar".format(
+            artifact_id=artifact_id, version=version
+        )
 
     def missing_jars(self):
-        file_list = [os.path.join(self.destdir, self.package_destination(p[1], p[2])) for p in self.packages]
-        return [f for f in file_list if not os.path.isfile(f)] # The missing files
+        file_list = [
+            os.path.join(self.destdir, self.package_destination(p[1], p[2]))
+            for p in self.packages
+        ]
+        return [f for f in file_list if not os.path.isfile(f)]  # The missing files
 
     def package_url(self, group_id, artifact_id, version):
         #
@@ -117,33 +130,36 @@ Which will download the required jars and rerun the install.
         # https://search.maven.org/remotecontent?filepath=org/apache/httpcomponents/httpclient/4.2/httpclient-4.2.jar
         # https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.2/httpclient-4.2.jar
         #
-        prefix = os.getenv("KCL_MVN_REPO_SEARCH_URL", 'https://repo1.maven.org/maven2/')
-        return '{prefix}{path}/{artifact_id}/{version}/{dest}'.format(
-                                        prefix=prefix,
-                                        path='/'.join(group_id.split('.')),
-                                        artifact_id=artifact_id,
-                                        version=version,
-                                        dest=self.package_destination(artifact_id, version))
+        prefix = os.getenv("KCL_MVN_REPO_SEARCH_URL", "https://repo1.maven.org/maven2/")
+        return "{prefix}{path}/{artifact_id}/{version}/{dest}".format(
+            prefix=prefix,
+            path="/".join(group_id.split(".")),
+            artifact_id=artifact_id,
+            version=version,
+            dest=self.package_destination(artifact_id, version),
+        )
 
     def download_file(self, url, dest):
         """
         Downloads a file at the url to the destination.
         """
-        print('Attempting to retrieve remote jar {url}'.format(url=url))
+        print("Attempting to retrieve remote jar {url}".format(url=url))
         try:
             response = urlopen(url)
-            with open(dest, 'wb') as dest_file:
+            with open(dest, "wb") as dest_file:
                 shutil.copyfileobj(response, dest_file)
-            print('Saving {url} -> {dest}'.format(url=url, dest=dest))
+            print("Saving {url} -> {dest}".format(url=url, dest=dest))
         except Exception as e:
-            print('Failed to retrieve {url}: {e}'.format(url=url, e=e))
+            print("Failed to retrieve {url}: {e}".format(url=url, e=e))
             return
 
     def download_files(self):
         for package in self.packages:
-            dest = os.path.join(self.destdir, self.package_destination(package[1], package[2]))
+            dest = os.path.join(
+                self.destdir, self.package_destination(package[1], package[2])
+            )
             if os.path.isfile(dest):
-                print('Skipping download of {dest}'.format(dest=dest))
+                print("Skipping download of {dest}".format(dest=dest))
             else:
                 url = self.package_url(package[0], package[1], package[2])
                 self.download_file(url, dest)
@@ -163,19 +179,18 @@ class DownloadJarsCommand(Command):
         """
         Runs when this command is given to setup.py
         """
-        downloader = MavenJarDownloader(on_completion=lambda : None)
+        downloader = MavenJarDownloader(on_completion=lambda: None)
         downloader.download_files()
-        print('''
+        print("""
 Now you should run:
 
     python setup.py install
 
 Which will finish the installation.
-''')
+""")
 
 
 class InstallThenCheckForJars(install):
-
     def do_install(self):
         install.run(self)
 
@@ -192,7 +207,6 @@ class InstallThenCheckForJars(install):
 
 try:
     from wheel.bdist_wheel import bdist_wheel
-
 
     class BdistWheelWithJars(bdist_wheel):
         """
@@ -212,10 +226,10 @@ try:
 except ImportError:
     pass
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     commands = {
-        'download_jars': DownloadJarsCommand,
-        'install': InstallThenCheckForJars,
+        "download_jars": DownloadJarsCommand,
+        "install": InstallThenCheckForJars,
     }
     try:
         #
@@ -224,21 +238,21 @@ if __name__ == '__main__':
         # It's important to note this is a hack.  There doesn't appear to be a way to execute hooks around wheel
         # creation by design.  See https://github.com/pypa/packaging-problems/issues/64 for more information.
         #
-        commands['bdist_wheel'] = BdistWheelWithJars
+        commands["bdist_wheel"] = BdistWheelWithJars
     except NameError:
         pass
 
     setup(
         name="kclpy-ext",
         version=PACKAGE_VERSION,
-        description='A python interface for the Amazon Kinesis Client Library MultiLangDaemon - ext',
-        license='Apache-2.0',
-        packages=[PACKAGE_NAME, PACKAGE_NAME + "/v2", PACKAGE_NAME + "/v3", 'samples'],
-        scripts=glob.glob('samples/*py'),
+        description="A python interface for the Amazon Kinesis Client Library MultiLangDaemon - ext",
+        license="Apache-2.0",
+        packages=[PACKAGE_NAME, PACKAGE_NAME + "/v2", PACKAGE_NAME + "/v3", "samples"],
+        scripts=glob.glob("samples/*py"),
         package_data={
-            '': ['*.txt', '*.md'],
-            PACKAGE_NAME: ['jars/*'],
-            'samples': ['sample.properties'],
+            "": ["*.txt", "*.md"],
+            PACKAGE_NAME: ["jars/*"],
+            "samples": ["sample.properties"],
         },
         install_requires=PYTHON_REQUIREMENTS,
         setup_requires=["pytest-runner"],
@@ -247,4 +261,4 @@ if __name__ == '__main__':
         url="https://github.com/localstack/amazon-kinesis-client-python",
         keywords="amazon kinesis client library python",
         zip_safe=False,
-        )
+    )
